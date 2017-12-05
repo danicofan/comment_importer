@@ -82,7 +82,7 @@ class VideoFLVInfo(object):
         self.video_id = video_id
 
         self.info = self.__getflvinfo(video_id)
-        print(self.info)
+        # print(self.info)
         self.thread_id = self.info['thread_id']
         self.user_id = self.info['user_id']
         self.length = self.info['l']
@@ -138,7 +138,6 @@ class Video(object):
                 yield comment
 
             while True:
-                print(comment.date)
                 response = self.__fetch_comment(date=comment.date)
                 comments_soup = list(reversed(response.find("packet").findAll("chat")))
                 if len(comments_soup) == 0:
@@ -181,7 +180,6 @@ class Video(object):
             premium=self.flv_info.is_premium,
             text=text
         )
-        print(xml)
 
         request = mechanize.Request(
             self.flv_info.ms,
@@ -192,7 +190,7 @@ class Video(object):
         response = self.browser.open(
             request
         ).read()
-        res = BeautifulSoup(response, "lxml").find("packet").find("chat_result")
+        res = BeautifulSoup(response, "html.parser").find("packet").find("chat_result")
         return res
 
     def __fetch_comment(self, date=None):
@@ -227,9 +225,7 @@ class Video(object):
             thread_id=self.flv_info.thread_id,
             block_no=comment_count // 100
         )
-        print(url)
         d = self.__urlquoted2dict(self.browser.open(url).read())
-        print(d)
         return d["postkey"]
 
 

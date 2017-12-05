@@ -4,15 +4,16 @@ import os
 import argparse
 
 import time
+import tqdm
 
 sys.path.append(os.path.dirname(__file__) + "/..")
 import nico_comment_import
 
 
-def main(args):
+def import_comment(original_video, target_video):
     nicovideo = nico_comment_import.NicovideoSevice(nico_comment_import.Config())
-    original_video = nicovideo.get_vieo(args.original_video)
-    target_video = nicovideo.get_vieo(args.target_video)
+    original_video = nicovideo.get_vieo(original_video)
+    target_video = nicovideo.get_vieo(target_video)
 
     assert original_video.flv_info.length == target_video.flv_info.length
     print(original_video.meta.title)
@@ -33,13 +34,10 @@ def main(args):
     for comment in comments:
         print(comment.original_text)
 
-    # k = raw_input("ok?")
-    # print k
-    # if k != "y":
-    #     exit(1)
 
-    for comment in comments:
+    for comment in tqdm.tqdm(comments):
         time.sleep(5)
+        print(comment.original_text)
         target_video.post_comment(comment.vpos, comment.original_text.encode("utf-8"))
 
 
@@ -48,4 +46,4 @@ if __name__ == '__main__':
     parser.add_argument("original_video")
     parser.add_argument("target_video")
     args = parser.parse_args()
-    main(args)
+    import_comment(args.orignal_video, args.target_video)
