@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import itertools
 import urllib
+import urllib2
 
 import mechanize
 import unicodedata
@@ -78,6 +79,7 @@ class VideoFLVInfo(object):
         self.video_id = video_id
 
         self.info = self.__getflvinfo(video_id)
+        print self.info
         self.thread_id = self.info['thread_id']
         self.user_id = self.info['user_id']
         self.ms = self.info['ms']
@@ -101,7 +103,13 @@ class Video(object):
         self.force_184 = threadkeyinfo["force_184"]
         self.waybackkey = self.__getwaybackkey()["waybackkey"]
 
-    def comments(self, size=10):
+        self.__get_ticket()
+
+    def __get_ticket(self):
+        response = self.__fetch_comment()
+        return response.find("packet").find("thread")['ticket']
+
+    def get_comments(self, size=10):
         def comments_generator():
             response = self.__fetch_comment()
             comments_soup = list(reversed(response.find("packet").findAll("chat")[:-2]))
@@ -125,6 +133,61 @@ class Video(object):
 
         ret = list(itertools.islice(comments_generator(), 0, size))
         return ret
+
+    def post_comment(self, vpos, text):
+
+        response = self.__post_comment(vpos, text, comment_count=1940953)
+        # response = self.__post_comment(vpos, text, comment_count=0)
+        if response["status"] != "0":
+            response = self.__post_comment(vpos, text, comment_count=int(response["no"]))
+
+    def __post_comment(self, vpos, text, comment_count):
+        postkey = self.__getpostkey(comment_count)
+        xml = '''
+        <chat thread="{thread_id}" 
+          ticket="{ticket}" 
+          user_id="{user_id}" 
+          vpos="{vpos}" 
+          mail="{command}" 
+          postkey="{post_key}" 
+          premium="{premium}"
+         >
+         {text}
+        </chat>
+        '''.format(
+            ticket=self.__get_ticket(),
+            thread_id=self.flv_info.thread_id,
+            user_id=self.flv_info.user_id,
+            vpos=vpos,
+            command="",
+            post_key=postkey,
+            premium=0,
+            text=text
+        )
+        print(xml)
+
+
+        # headers = self.browser.headers
+        self.browser.set_header('Content-Type', 'application/xml')
+        request = mechanize.Request(
+            self.flv_info.ms,
+            data=xml,
+            # headers={'Content-Type': 'application/xml'}
+        )
+        request.add_header('Content-Type', 'application/xml')
+
+        response = self.browser.open(
+            request
+        ).read()
+        print(response)
+        # import requests
+        # response = requests.post(
+        #     url=self.flv_info.ms,
+        #     data=xml
+        # )
+        res = BeautifulSoup(response, "lxml").find("packet").find("chat_result")
+        print res
+        return res
 
     def __fetch_comment(self, date=None):
         if date is None:
@@ -152,6 +215,16 @@ class Video(object):
         raw_list = [token.split("=") for token in response_string.split("&")]
         unquoted_dict = dict([[k, urllib.unquote(v)] for k, v in raw_list])
         return unquoted_dict
+
+    def __getpostkey(self, comment_count=0):
+        url = "http://flapi.nicovideo.jp/api/getpostkey/?version=1&yugi=&device=1&block_no={block_no}&thread={thread_id}&version_sub=2".format(
+            thread_id=self.flv_info.thread_id,
+            block_no=comment_count // 100
+        )
+        print(url)
+        d = self.__urlquoted2dict(self.browser.open(url).read())
+        print(d)
+        return d["postkey"]
 
 
 class NicovideoSevice(object):
