@@ -7,11 +7,14 @@ import mechanize
 import unicodedata
 
 import time
+
+import re
 from bs4 import BeautifulSoup
 
 
 class Comment(object):
     def __init__(self, text, date, vpos):
+        self.original_text = text
         self.text = self.normalize(text)
         self.date = date
         self.vpos = vpos
@@ -79,10 +82,12 @@ class VideoFLVInfo(object):
         self.video_id = video_id
 
         self.info = self.__getflvinfo(video_id)
-        print self.info
+        print(self.info)
         self.thread_id = self.info['thread_id']
         self.user_id = self.info['user_id']
+        self.length = self.info['l']
         self.ms = self.info['ms']
+        self.is_premium = int(self.info['is_premium'])
 
     def __getflvinfo(self, video_id):
         url = "http://flapi.nicovideo.jp/api/getflv/{}".format(video_id)
@@ -95,8 +100,9 @@ class VideoFLVInfo(object):
 class Video(object):
     def __init__(self, browser, video_id):
         self.browser = browser
-        self.meta = VideoMeta(browser, video_id)
-        self.flv_info = VideoFLVInfo(browser, video_id)
+        self.video_id = self.__trueid(video_id)
+        self.meta = VideoMeta(browser, self.video_id)
+        self.flv_info = VideoFLVInfo(browser, self.video_id)
 
         threadkeyinfo = self.__getthreadkey()
         self.threadkey = threadkeyinfo["threadkey"]
@@ -105,6 +111,17 @@ class Video(object):
 
         self.__get_ticket()
 
+    def __trueid(self, video_id):
+        return self.__getnicoid(self.__getredirect("http://www.nicovideo.jp/watch/{}".format(video_id)))
+
+    def __getredirect(self, url):
+        self.browser.open(url)
+        return self.browser.geturl()
+
+    def __getnicoid(self, url):
+        nicoid = re.search('([snmol0-9]*[0-9]+)', url).groups()[0]
+        return nicoid
+
     def __get_ticket(self):
         response = self.__fetch_comment()
         return response.find("packet").find("thread")['ticket']
@@ -112,7 +129,7 @@ class Video(object):
     def get_comments(self, size=10):
         def comments_generator():
             response = self.__fetch_comment()
-            comments_soup = list(reversed(response.find("packet").findAll("chat")[:-2]))
+            comments_soup = list(reversed(response.find("packet").findAll("chat")))
             if len(comments_soup) == 0:
                 raise StopIteration
             for chat in comments_soup:
@@ -123,7 +140,7 @@ class Video(object):
             while True:
                 print(comment.date)
                 response = self.__fetch_comment(date=comment.date)
-                comments_soup = list(reversed(response.find("packet").findAll("chat")[:-2]))
+                comments_soup = list(reversed(response.find("packet").findAll("chat")))
                 if len(comments_soup) == 0:
                     raise StopIteration
                 for chat in comments_soup:
@@ -135,11 +152,11 @@ class Video(object):
         return ret
 
     def post_comment(self, vpos, text):
-
-        response = self.__post_comment(vpos, text, comment_count=1940953)
-        # response = self.__post_comment(vpos, text, comment_count=0)
+        response = self.__post_comment(vpos, text, comment_count=0)
         if response["status"] != "0":
             response = self.__post_comment(vpos, text, comment_count=int(response["no"]))
+        if response["status"] != "0":
+            raise Exception("coudn't post comment")
 
     def __post_comment(self, vpos, text, comment_count):
         postkey = self.__getpostkey(comment_count)
@@ -161,37 +178,26 @@ class Video(object):
             vpos=vpos,
             command="",
             post_key=postkey,
-            premium=0,
+            premium=self.flv_info.is_premium,
             text=text
         )
         print(xml)
 
-
-        # headers = self.browser.headers
-        self.browser.set_header('Content-Type', 'application/xml')
         request = mechanize.Request(
             self.flv_info.ms,
             data=xml,
-            # headers={'Content-Type': 'application/xml'}
         )
         request.add_header('Content-Type', 'application/xml')
 
         response = self.browser.open(
             request
         ).read()
-        print(response)
-        # import requests
-        # response = requests.post(
-        #     url=self.flv_info.ms,
-        #     data=xml
-        # )
         res = BeautifulSoup(response, "lxml").find("packet").find("chat_result")
-        print res
         return res
 
     def __fetch_comment(self, date=None):
         if date is None:
-            date = int(time.time())
+            date = int(time.time()) + 10
         url = "{ms}thread?thread={thread_id}&version=20061206&res_from=-1000&scores=1&waybackkey={waybackkey}&threadkey={thread_key}&force_184={force_184}&user_id={user_id}&when={date}".format(
             ms=self.flv_info.ms,
             thread_id=self.flv_info.thread_id,
