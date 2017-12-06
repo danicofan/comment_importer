@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import collections
-
+import tqdm
 
 class CommentFilter(object):
     """
@@ -24,7 +24,7 @@ class CommentFilter(object):
                 continue
                 # 頻度が低い。弾幕ではない
 
-            burst = self.find_burst(comments, window)
+            burst = self.find_burst(comments, window, min_count)
             if burst is None:
                 continue
                 #burstではない
@@ -39,11 +39,23 @@ class CommentFilter(object):
 
             yield burst
 
-    def find_burst(self, comments, window):
+    def find_burst(self, comments, window, min_count):
         """
         同じコメントがバーストしてる市を探す。なければNone
         """
+        maxcount = 0
         for candidate_comment in comments:
+            count = 0
             for comment in comments:
-                if comment.vpos >= candidate_comment.vpos and comment.vpos <= candidate_comment.vpos + window:
-                    return candidate_comment
+                if comment.vpos >= candidate_comment.vpos and comment.vpos <= candidate_comment.vpos + window * 100:
+                    count += 1
+            maxcount = max(maxcount, count)
+        if maxcount < min_count:
+            return None
+        for candidate_comment in comments:
+            count = 0
+            for comment in comments:
+                if comment.vpos >= candidate_comment.vpos and comment.vpos <= candidate_comment.vpos + window * 100:
+                    count += 1
+            if count == maxcount:
+                return candidate_comment

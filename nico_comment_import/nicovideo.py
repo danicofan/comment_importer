@@ -105,11 +105,12 @@ class Video(object):
         self.flv_info = VideoFLVInfo(browser, self.video_id)
 
         threadkeyinfo = self.__getthreadkey()
-        self.threadkey = threadkeyinfo["threadkey"]
-        self.force_184 = threadkeyinfo["force_184"]
-        self.waybackkey = self.__getwaybackkey()["waybackkey"]
+        if not threadkeyinfo is None:
+            self.threadkey = threadkeyinfo["threadkey"]
+            self.force_184 = threadkeyinfo["force_184"]
+            self.waybackkey = self.__getwaybackkey()["waybackkey"]
 
-        self.__get_ticket()
+            self.__get_ticket()
 
     def __trueid(self, video_id):
         return self.__getnicoid(self.__getredirect("http://www.nicovideo.jp/watch/{}".format(video_id)))
@@ -153,7 +154,7 @@ class Video(object):
     def post_comment(self, vpos, text):
         response = self.__post_comment(vpos, text, comment_count=0)
         if response["status"] != "0":
-            response = self.__post_comment(vpos, text, comment_count=int(response["no"]))
+            response = self.__post_comment(vpos, text, comment_count=int(response["no"])+1)
         if response["status"] != "0":
             raise Exception("coudn't post comment")
 
@@ -213,7 +214,11 @@ class Video(object):
 
     def __getthreadkey(self):
         url = "http://flapi.nicovideo.jp/api/getthreadkey?thread={}".format(self.flv_info.thread_id)
-        return self.__urlquoted2dict(self.browser.open(url).read())
+        try:
+            return self.__urlquoted2dict(self.browser.open(url).read())
+        except ValueError:
+            print "Maybe, not a channel's video"
+            return None
 
     def __urlquoted2dict(self, response_string):
         raw_list = [token.split("=") for token in response_string.split("&")]
