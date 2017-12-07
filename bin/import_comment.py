@@ -48,7 +48,7 @@ def import_comment(original_video, target_video, min_count=3, force=False, offse
         print(comment.original_text)
 
     for comment in tqdm.tqdm(comments):
-        if vpos / 100 > (original_video.flv_info.length - cutlast):
+        if comment.vpos / 100 > (original_video.flv_info.length - cutlast):
             continue
         time.sleep(5)
         vpos = comment.vpos + offset + int((random.random() * 1.5 - 0.5) * 100)  # [-0.5, 1]秒ずらす。あとから同じコメントが来ても変じゃないように
