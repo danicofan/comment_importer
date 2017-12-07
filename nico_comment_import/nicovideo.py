@@ -85,7 +85,7 @@ class VideoFLVInfo(object):
         # print(self.info)
         self.thread_id = self.info['thread_id']
         self.user_id = self.info['user_id']
-        self.length = self.info['l']
+        self.length = int(self.info['l'])
         self.ms = self.info['ms']
         self.is_premium = int(self.info['is_premium'])
 
@@ -156,7 +156,10 @@ class Video(object):
         if response["status"] != "0":
             response = self.__post_comment(vpos, text, comment_count=int(response["no"])+1)
         if response["status"] != "0":
-            raise Exception("coudn't post comment")
+            time.sleep(20)
+            response = self.__post_comment(vpos, text, comment_count=int(response["no"]) + 1)
+        if response["status"] != "0":
+            raise Exception("couldn't post comment")
 
     def __post_comment(self, vpos, text, comment_count):
         postkey = self.__getpostkey(comment_count)

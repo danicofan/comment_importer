@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import requests
 
-
 class NiconicoSearch(object):
     def search_title(self, title):
         params = {

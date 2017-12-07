@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import collections
-import tqdm
+import nico_comment_import
+import time
+
 
 class CommentFilter(object):
     """
@@ -19,6 +21,8 @@ class CommentFilter(object):
         counter = collections.defaultdict(list)
         for comment in self.original_video.get_comments(self.limit):
             counter[comment.text].append(comment)
+
+        burst_count = 0
         for comments in counter.values():
             if len(comments) <= min_count:
                 continue
@@ -27,29 +31,41 @@ class CommentFilter(object):
             burst = self.find_burst(comments, window, min_count)
             if burst is None:
                 continue
-                #burstではない
+                # burstではない
 
             if burst.text in target_comments:
                 continue
                 # 既に移植済み
 
-            if burst.text == u"見納め":
+            if burst.text.find(u"見納め") >= 0:
                 continue
-                # 見納めコメントはうざい
+                # 見納めコメントは。。。
 
+            if burst.text.find(u"ミリオン") >= 0:
+                continue
+                # ミリオン祝は。。。
+
+            burst_count += 1
             yield burst
+        if burst_count > 10:
+            for comment in list(target_comments):
+                if comment.find(u"チャンネルから") >= 0:
+                    break
+            else:
+                yield nico_comment_import.Comment(text=u"チャンネルから少しコメント移植してみました", date=time.time(), vpos=100)
 
     def find_burst(self, comments, window, min_count):
         """
-        同じコメントがバーストしてる市を探す。なければNone
+        同じコメントがバーストしてる位置を探す。なければNone
         """
         maxcount = 0
         for candidate_comment in comments:
             count = 0
             for comment in comments:
+                # windowサイズ内に入るコメント数
                 if comment.vpos >= candidate_comment.vpos and comment.vpos <= candidate_comment.vpos + window * 100:
                     count += 1
-            maxcount = max(maxcount, count)
+            maxcount = max(maxcount, count)  # 最大弾幕サイズ
         if maxcount < min_count:
             return None
         for candidate_comment in comments:
@@ -57,5 +73,5 @@ class CommentFilter(object):
             for comment in comments:
                 if comment.vpos >= candidate_comment.vpos and comment.vpos <= candidate_comment.vpos + window * 100:
                     count += 1
-            if count == maxcount:
+            if count > int(maxcount * 0.8):  # 先頭20%
                 return candidate_comment
