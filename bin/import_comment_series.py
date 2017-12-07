@@ -28,6 +28,22 @@ def main(args):
 
         query = ditem['title'].replace(u"／", " ").replace(u"？", " ")
         query = query.replace(u"【日テレオンデマンド】", " ")
+        query = query.replace(u"II", u"Ⅱ")
+        query = query.replace(u"III", u"Ⅲ")
+        query = query.replace(u"IV", u"Ⅳ")
+        query = query.replace(u"V", u"Ⅴ")
+        query = query.replace(u"VI", u"Ⅵ")
+        query = query.replace(u"VII", u"Ⅶ")
+        query = query.replace(u"Ｉ", u"Ⅰ")
+        query = query.replace(u"ＩＩ", u"Ⅱ")
+        query = query.replace(u"ＩＩＩ", u"Ⅲ")
+        query = query.replace(u"ＩＶ", u"Ⅳ")
+        query = query.replace(u"Ｖ", u"Ⅴ")
+        query = query.replace(u"ＶＩ", u"Ⅵ")
+        query = query.replace(u"ＶＩＩ", u"Ⅶ")
+        query = query.replace(u"ＶＩＩＩ", u"Ⅷ")
+        query = query.replace(u"ＩＸ", u"Ⅸ")
+        query = query.replace(u"Ｘ", u"Ⅹ")
 
         if args.remove_regexp:
             for regexp in args.remove_regexp:
