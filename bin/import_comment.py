@@ -6,6 +6,7 @@ import random
 
 import time
 import tqdm
+import urllib2
 
 sys.path.append(os.path.dirname(__file__) + "/..")
 import nico_comment_import
@@ -40,7 +41,7 @@ def import_comment(original_video, target_video, min_count=3, force=False, offse
     filter = nico_comment_import.CommentFilter(
         original_video,
         target_video,
-        limit=10000,
+        limit=20000,
     )
 
     comments = list(filter.get_filtered_comments(min_count=min_count, window=5))
@@ -53,7 +54,12 @@ def import_comment(original_video, target_video, min_count=3, force=False, offse
         time.sleep(5)
         vpos = comment.vpos + offset + int((random.random() * 1.5 - 0.5) * 100)  # [-0.5, 1]秒ずらす。あとから同じコメントが来ても変じゃないように
         vpos = max(vpos, 0)
-        target_video.post_comment(vpos, comment.original_text.encode("utf-8"))
+        try:
+            target_video.post_comment(vpos, comment.original_text.encode("utf-8"))
+        except urllib2.HTTPError as e:
+            if e.code == 404:  # 原因不明
+                print comment.original_text
+                print e
     return True
 
 
