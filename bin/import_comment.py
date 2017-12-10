@@ -17,7 +17,7 @@ def import_comment(original_video, target_video, min_count=3, force=False, offse
     original_video = nicovideo.get_vieo(original_video)
     target_video = nicovideo.get_vieo(target_video)
 
-    if abs(original_video.flv_info.length + offset - cutlast - target_video.flv_info.length) > 1:
+    if abs(original_video.flv_info.length - offset - cutlast - target_video.flv_info.length) > 1:
         print "two videos have different length"
         print original_video.flv_info.length, original_video.meta.title
         print target_video.flv_info.length, target_video.meta.title

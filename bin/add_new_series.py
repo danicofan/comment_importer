@@ -20,14 +20,7 @@ def main(args):
     search = nico_comment_import.NiconicoSearch()
     print(args.series)
     danime = nico_comment_import.danime.DAnimeService(os.path.join(ROOTPATH, "data"))
-    danime.add_series(
-        nico_comment_import.danime.DAnimeSeries(args.series)
-    )
-
-
-
-    exit(0)
-
+    series = nico_comment_import.danime.DAnimeSeries(args.series)
 
     for ditem in search.search_tags_exact(["dアニメストア", args.series]):
         if args.grep_filter is not None:
@@ -77,22 +70,19 @@ def main(args):
             if (ditem['contentId'] == item['contentId']):
                 continue
 
-            print(item['title'])
-            print("cooldown...")
-            time.sleep(30)  # 連続アクセス規制
-            try:
-                result = import_comment.import_comment(item['contentId'], ditem['contentId'], min_count=args.min_count,
-                                                       force=args.force, offset=args.offset, cutlast=args.cutlast)
-                if result: break
-            except AssertionError as e:
-                print e
-            except urllib2.HTTPError as e:
-                print e
-                time.sleep(random.randint(30, 180))  # 連続アクセス規制
-                result = import_comment.import_comment(item['contentId'], ditem['contentId'],
-                                                       min_count=args.min_count,
-                                                       force=args.force, offset=args.offset, cutlast=args.cutlast)
-                if result: break
+            print(ditem)
+            if abs(int(item['lengthSeconds']) - args.offset - args.cutlast - ditem['lengthSeconds']) > 1:
+                print "two videos have different length"
+                print ditem['lengthSeconds'], ditem['title']
+                print item['lengthSeconds'], item['title']
+            else:
+                series.add_video(
+                    nico_comment_import.danime.DAnimeVideo(ditem, item, args.offset, args.cutlast)
+                )
+                break
+    for video in series.videos:
+        print(video.dump())
+    danime.add_series(series)
 
 
 if __name__ == '__main__':
