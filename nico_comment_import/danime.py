@@ -14,10 +14,18 @@ class DAnimeVideo(object):
 
     def dump(self):
         json = self.danime_content
-        json["offset"] = self.offset
-        json["cutlast"] = self.cutlast
-        json["channel_content"] = self.channel_content
+        if self.channel_content is not None:
+            json["offset"] = self.offset
+            json["cutlast"] = self.cutlast
+            json["channel_content"] = self.channel_content
         return json
+
+    @staticmethod
+    def load(json):
+        if "channel_content" in json:
+            return DAnimeVideo(json, json["channel_content"], json["offset"], json["cutlast"])
+        else:
+            return DAnimeVideo(json, None, 0, 0)
 
 
 class DAnimeSeries(object):
@@ -37,13 +45,22 @@ class DAnimeSeries(object):
                 "videos": [video.dump() for video in self.videos]
             }, f, indent=2)
 
+    @staticmethod
+    def load(path):
+        with open(path) as f:
+            json_data = json.load(f)
+            series = DAnimeSeries(json_data["title"])
+            series.videos = [DAnimeVideo.load(video) for video in json_data["videos"]]
+            return series
+
     def __kakashi_convert(self, text):
         kakasi_service = kakasi()
         kakasi_service.setMode("H", "a")  # default: Hiragana no convert
         kakasi_service.setMode("K", "a")  # default: Katakana no convert
         kakasi_service.setMode("J", "a")  # default: Japanese no convert
         conv = kakasi_service.getConverter()
-        result = conv.do(text)
+        result = conv.do(text).encode("utf-8")
+        result = "".join([c for c in result if c.isalnum()])
         return result
 
 

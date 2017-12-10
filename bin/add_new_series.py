@@ -64,13 +64,10 @@ def main(args):
         if args.query_head is not None:
             query = " ".join(query.split()[:args.query_head])
 
-        print(query)
-
         for item in search.search_title(query):
             if (ditem['contentId'] == item['contentId']):
                 continue
 
-            print(ditem)
             if abs(int(item['lengthSeconds']) - args.offset - args.cutlast - ditem['lengthSeconds']) > 1:
                 print "two videos have different length"
                 print ditem['lengthSeconds'], ditem['title']
@@ -80,9 +77,21 @@ def main(args):
                     nico_comment_import.danime.DAnimeVideo(ditem, item, args.offset, args.cutlast)
                 )
                 break
+        else:
+            series.add_video(
+                nico_comment_import.danime.DAnimeVideo(ditem, None, args.offset, args.cutlast)
+            )
+    print "VVVVVV 確認 VVVVVV"
     for video in series.videos:
-        print(video.dump())
-    danime.add_series(series)
+        print "=======\n{}\n{}".format(
+            video.danime_content['title'].encode("utf-8"),
+            video.channel_content['title'].encode("utf-8") if video.channel_content is not None else "なし" )
+    k = raw_input("ok?")
+    print k
+    if k != "y":
+        exit(1)
+    else:
+        danime.add_series(series)
 
 
 if __name__ == '__main__':

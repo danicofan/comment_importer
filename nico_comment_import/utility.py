@@ -7,5 +7,5 @@ def retry_call(f, random_time, max_retry=3):
         try:
             return f()
         except:
-            random.randint(random_time)
+            random.randint(0, random_time)
     return f()
