@@ -7,9 +7,11 @@ import mechanize
 import unicodedata
 
 import time
-
+import random
 import re
 from bs4 import BeautifulSoup
+
+import nico_comment_import
 
 
 class Comment(object):
@@ -124,8 +126,14 @@ class Video(object):
         return nicoid
 
     def __get_ticket(self):
-        response = self.__fetch_comment()
-        return response.find("packet").find("thread")['ticket']
+        def __get_ticket_internal():
+            response = self.__fetch_comment()
+            return response.find("packet").find("thread")['ticket']
+
+        ticket = nico_comment_import.utility.retry_call(
+            __get_ticket_internal, max_retry=3, random_time=180
+        )
+        return ticket
 
     def get_comments(self, size=10):
         def comments_generator():
@@ -154,7 +162,7 @@ class Video(object):
     def post_comment(self, vpos, text):
         response = self.__post_comment(vpos, text, comment_count=0)
         if response["status"] != "0":
-            response = self.__post_comment(vpos, text, comment_count=int(response["no"])+1)
+            response = self.__post_comment(vpos, text, comment_count=int(response["no"]) + 1)
         if response["status"] != "0":
             time.sleep(20)
             response = self.__post_comment(vpos, text, comment_count=int(response["no"]) + 1)
