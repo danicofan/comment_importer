@@ -55,7 +55,10 @@ def import_comment(original_video, target_video, min_count=3, force=False, offse
         vpos = comment.vpos + offset + int((random.random() * 1.5 - 0.5) * 100)  # [-0.5, 1]秒ずらす。あとから同じコメントが来ても変じゃないように
         vpos = max(vpos, 0)
         try:
-            target_video.post_comment(vpos, comment.original_text.encode("utf-8"))
+            nico_comment_import.utility.retry_call(
+                lambda: target_video.post_comment(vpos, comment.original_text.encode("utf-8")),
+                max_retry=3, random_time=180
+            )
         except urllib2.HTTPError as e:
             if e.code == 404:  # 原因不明
                 print comment.original_text
