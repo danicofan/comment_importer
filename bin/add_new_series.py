@@ -36,8 +36,14 @@ def main(args):
 
         # 登録済みか
         existing_video = series.search_video_by_content_id(ditem['contentId'])
+        # print existing_video.danime_content['contentId']
+        # print existing_video.danime_content['title']
         if (existing_video is not None) and (existing_video.channel_content is not None):
             continue
+        else:
+            print existing_video
+            print ditem['title']
+            print ditem['contentId']
 
         query = ditem['title'].replace(u"／", " ").replace(u"？", " ")
         query = query.replace(u"【日テレオンデマンド】", " ")

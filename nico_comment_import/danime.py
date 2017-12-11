@@ -35,7 +35,12 @@ class DAnimeSeries(object):
         self.videos = []
 
     def add_video(self, video):
-        self.videos.append(video)
+        for i in range(len(self.videos)):
+            if self.videos[i].danime_content["contentId"] == video.danime_content["contentId"]:
+                self.videos[i] = video
+                break
+        else:
+            self.videos.append(video)
 
     def save(self, directory):
         assert isinstance(self.title, unicode)
@@ -71,7 +76,6 @@ class DAnimeSeries(object):
                 return video
         else:
             return None
-
 
 
 class DAnimeService(object):
