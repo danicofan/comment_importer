@@ -22,12 +22,13 @@ def main(args):
         print("cooldown...")
         time.sleep(30)  # 連続アクセス規制
 
-        nico_comment_import.utility.retry_call(
-            lambda: import_comment.import_comment(video.channel_content['contentId'], video.danime_content['contentId'],
-                                                  min_count=args.min_count,
-                                                  force=args.force, offset=video.danime_content['offset'], cutlast=video.danime_content['cutlast']),
-            random_time=270, max_retry=3
-        )
+        if video.channel_content is not None:
+            nico_comment_import.utility.retry_call(
+                lambda: import_comment.import_comment(video.channel_content['contentId'], video.danime_content['contentId'],
+                                                      min_count=args.min_count,
+                                                      force=args.force, offset=video.danime_content['offset'], cutlast=video.danime_content['cutlast']),
+                random_time=270, max_retry=3
+            )
 
 
 if __name__ == '__main__':

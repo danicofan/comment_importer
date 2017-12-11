@@ -21,6 +21,7 @@ class CommentFilter(object):
         counter = collections.defaultdict(list)
         for comment in self.original_video.get_comments(self.limit):
             counter[comment.text].append(comment)
+        print "channel_comments: ", len(counter)
 
         burst_count = 0
         for comments in counter.values():

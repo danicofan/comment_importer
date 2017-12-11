@@ -20,7 +20,10 @@ def main(args):
     search = nico_comment_import.NiconicoSearch()
     print(args.series)
     danime = nico_comment_import.danime.DAnimeService(os.path.join(ROOTPATH, "data"))
-    series = nico_comment_import.danime.DAnimeSeries(args.series)
+
+    series = danime.search_series_by_title(args.series.decode("utf-8"))
+    if series is None:
+        series = nico_comment_import.danime.DAnimeSeries(args.series.decode("utf-8"))
 
     for ditem in search.search_tags_exact(["dアニメストア", args.series]):
         if args.grep_filter is not None:
@@ -30,6 +33,11 @@ def main(args):
             print re.search(args.grep_filter_ignore.decode("utf-8"), ditem['title'])
             if re.search(args.grep_filter_ignore.decode("utf-8"), ditem['title']):
                 continue
+
+        # 登録済みか
+        existing_video = series.search_video_by_content_id(ditem['contentId'])
+        if (existing_video is not None) and (existing_video.channel_content is not None):
+            continue
 
         query = ditem['title'].replace(u"／", " ").replace(u"？", " ")
         query = query.replace(u"【日テレオンデマンド】", " ")
@@ -55,7 +63,7 @@ def main(args):
                 query = re.sub(regexp.decode("utf-8"), "", query)
         if args.remove_wa:
             query = re.sub(u"第.*話", "", query)
-        else:
+        elif not args.ambiguous_wa: # strict match
             query = re.sub(u"(第.*話)", r'"\1"', query)
 
         if args.remove_title:
@@ -104,6 +112,7 @@ if __name__ == '__main__':
     parser.add_argument("--remove_wa", action="store_true")
     parser.add_argument("--remove_regexp", nargs="+")
     parser.add_argument("--remove_title", action="store_true")
+    parser.add_argument("--ambiguous_wa", action="store_true")
     parser.add_argument("--grep_filter")
     parser.add_argument("--grep_filter_ignore")
     args = parser.parse_args()
