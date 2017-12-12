@@ -3,36 +3,40 @@ import glob
 import json
 
 import os
+import time
 from pykakasi import kakasi
 
 
 class DAnimeVideo(object):
-    def __init__(self, danime_content, channel_content, offset, cutlast):
+    def __init__(self, danime_content, channel_content, offset, cutlast, comment_imported = False):
         self.cutlast = cutlast
         self.offset = offset
         self.channel_content = channel_content
         self.danime_content = danime_content
+        self.comment_imported = comment_imported
 
     def dump(self):
         json = self.danime_content
+        json["commentImported"] = self.comment_imported
         if self.channel_content is not None:
             json["offset"] = self.offset
             json["cutlast"] = self.cutlast
-            json["channel_content"] = self.channel_content
+            json["channelContent"] = self.channel_content
         return json
 
     @staticmethod
     def load(json):
-        if "channel_content" in json:
-            return DAnimeVideo(json, json["channel_content"], json["offset"], json["cutlast"])
+        if "channelContent" in json:
+            return DAnimeVideo(json, json["channelContent"], json["offset"], json["cutlast"], json["commentImported"])
         else:
-            return DAnimeVideo(json, None, 0, 0)
+            return DAnimeVideo(json, None, 0, 0, json["commentImported"])
 
 
 class DAnimeSeries(object):
     def __init__(self, title):
         self.title = title
         self.videos = []
+        self.first_appeared = int(time.time())
 
     def add_video(self, video):
         for i in range(len(self.videos)):
@@ -49,6 +53,7 @@ class DAnimeSeries(object):
         with open(path, "w+") as f:
             json.dump({
                 "title": self.title,
+                "firstAppeared": self.first_appeared,
                 "videos": [video.dump() for video in self.videos]
             }, f, indent=2)
 
@@ -57,6 +62,7 @@ class DAnimeSeries(object):
         with open(path) as f:
             json_data = json.load(f)
             series = DAnimeSeries(json_data["title"])
+            series.first_appeared = json_data["firstAppeared"]
             series.videos = [DAnimeVideo.load(video) for video in json_data["videos"]]
             return series
 

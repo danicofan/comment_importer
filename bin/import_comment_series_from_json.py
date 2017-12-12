@@ -7,7 +7,8 @@ import urllib2
 import sys
 import time
 
-sys.path.append(os.path.dirname(__file__) + "/..")
+ROOTPATH = os.path.dirname(__file__) + "/.."
+sys.path.append(ROOTPATH)
 import nico_comment_import
 
 import import_comment
@@ -27,9 +28,12 @@ def main(args):
                 lambda: import_comment.import_comment(video.channel_content['contentId'], video.danime_content['contentId'],
                                                       min_count=args.min_count,
                                                       force=args.force, offset=video.danime_content['offset'], cutlast=video.danime_content['cutlast']),
-                random_time=270, max_retry=3
+                random_time=300, max_retry=5
             )
-
+            video.comment_imported = True
+            series.add_video(video)
+    danime = nico_comment_import.danime.DAnimeService(os.path.join(ROOTPATH, "data"))
+    danime.add_series(series)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
