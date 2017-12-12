@@ -70,7 +70,7 @@ def main(args):
         if args.remove_wa:
             query = re.sub(u"第.*話", "", query)
         elif not args.ambiguous_wa: # strict match
-            query = re.sub(u"(第.*話)", r'"\1"', query)
+            query = re.sub(u"(第.*話) ", r'"\1" ', query)
 
         if args.remove_title:
             query = " ".join(query.split()[1:])  # 最初の文節を除去
@@ -78,6 +78,11 @@ def main(args):
         if args.query_head is not None:
             query = " ".join(query.split()[:args.query_head])
 
+        for regexp in args.exact_regexp:
+            query = re.sub(u"("+regexp.decode("utf-8")+u")", r'"\1"', query)
+
+
+        print query
         for item in search.search_title(query):
             if (ditem['contentId'] == item['contentId']):
                 continue
@@ -117,6 +122,7 @@ if __name__ == '__main__':
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--remove_wa", action="store_true")
     parser.add_argument("--remove_regexp", nargs="+")
+    parser.add_argument("--exact_regexp", nargs="+", default=[])
     parser.add_argument("--remove_title", action="store_true")
     parser.add_argument("--ambiguous_wa", action="store_true")
     parser.add_argument("--grep_filter")
