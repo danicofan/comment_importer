@@ -4,11 +4,13 @@ import json
 
 import os
 import time
+import unicodedata
+
 from pykakasi import kakasi
 
 
 class DAnimeVideo(object):
-    def __init__(self, danime_content, channel_content, offset, cutlast, comment_imported = False):
+    def __init__(self, danime_content, channel_content, offset, cutlast, comment_imported=False):
         self.cutlast = cutlast
         self.offset = offset
         self.channel_content = channel_content
@@ -67,6 +69,7 @@ class DAnimeSeries(object):
             return series
 
     def __kakashi_convert(self, text):
+        text = unicodedata.normalize("NFKC", text)
         kakasi_service = kakasi()
         kakasi_service.setMode("H", "a")  # default: Hiragana no convert
         kakasi_service.setMode("K", "a")  # default: Katakana no convert

@@ -25,7 +25,12 @@ def main(args):
     if series is None:
         series = nico_comment_import.danime.DAnimeSeries(args.series.decode("utf-8"))
 
-    for ditem in search.search_tags_exact(["dアニメストア", args.series]):
+    if args.search_title_ambiguous:
+        search_title = search.search_title_tag(args.series, "dアニメストア")
+    else:
+        search_title = search.search_tags_exact(["dアニメストア", args.series])
+
+    for ditem in search_title:
         if args.grep_filter is not None:
             if not re.search(args.grep_filter.decode("utf-8"), ditem['title']):
                 continue
@@ -66,7 +71,7 @@ def main(args):
 
         if args.remove_regexp:
             for regexp in args.remove_regexp:
-                query = re.sub(regexp.decode("utf-8"), "", query)
+                query = re.sub(regexp.decode("utf-8"), " ", query)
         if args.remove_wa:
             query = re.sub(u"第.*話", "", query)
         elif not args.ambiguous_wa: # strict match
@@ -116,6 +121,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("series")
+    parser.add_argument("--search_title_ambiguous", action="store_true")
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--cutlast", type=int, default=0)
     parser.add_argument("--query_head", type=int)

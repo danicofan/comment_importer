@@ -2,7 +2,7 @@
 import requests
 
 class NiconicoSearch(object):
-    def search_title(self, title):
+    def search_title(self, title, additional_params=dict()):
         params = {
             "targets": "title",
             "fields": "contentId,title,viewCounter,thumbnailUrl,tags,description,startTime,lengthSeconds",
@@ -10,6 +10,7 @@ class NiconicoSearch(object):
             "_context": "apiguide_application",
             "q": title,
         }
+        params.update(additional_params)
 
         r = requests.get(
             url='http://api.search.nicovideo.jp/api/v2/snapshot/video/contents/search',
@@ -17,6 +18,16 @@ class NiconicoSearch(object):
         )
         for item in r.json()["data"]:
             yield item
+
+    def search_title_tag(self, title, tag):
+        return self.search_title(title, additional_params={
+            "filters[tags][0]": tag,
+            "filters[tags][1]": tag,
+            "filters[tags][2]": tag,
+            "filters[tags][3]": tag,
+            "filters[tags][4]": tag,
+            "filters[tags][5]": tag
+        })
 
     def search_tags_base(self, target, tags, additional_params=dict(), limit=100):
         """

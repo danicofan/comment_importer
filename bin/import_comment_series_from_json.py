@@ -28,7 +28,7 @@ def main(args):
                 lambda: import_comment.import_comment(video.channel_content['contentId'], video.danime_content['contentId'],
                                                       min_count=args.min_count,
                                                       force=args.force, offset=video.danime_content['offset'], cutlast=video.danime_content['cutlast']),
-                random_time=300, max_retry=5
+                random_time=600, max_retry=5
             )
             video.comment_imported = True
             series.add_video(video)

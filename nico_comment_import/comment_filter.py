@@ -46,6 +46,10 @@ class CommentFilter(object):
                 continue
                 # 煽り
 
+            if burst.text.find(u"荒") >= 0:
+                continue
+                # 煽り
+
             if burst.text.find(u"ミリオン") >= 0:
                 continue
                 # ミリオン祝は。。。
