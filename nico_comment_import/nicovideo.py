@@ -54,7 +54,7 @@ class Comment(object):
         """
         # 空白除去
         if text is None: return None
-        unicode_normalized = unicodedata.normalize('NFKC', text)
+        unicode_normalized = unicodedata.normalize('NFKC', text).lower()
         normalized = "".join(unicode_normalized.split())
         cyclic_normalized = self.cyclic_normalize(normalized)
         return cyclic_normalized
