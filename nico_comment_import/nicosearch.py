@@ -5,7 +5,7 @@ class NiconicoSearch(object):
     def search_title(self, title, additional_params=dict()):
         params = {
             "targets": "title",
-            "fields": "contentId,title,viewCounter,thumbnailUrl,tags,description,startTime,lengthSeconds",
+            "fields": "contentId,title,viewCounter,thumbnailUrl,tags,description,startTime,lengthSeconds,channelId",
             "_sort": "-viewCounter",
             "_context": "apiguide_application",
             "q": title,
@@ -37,7 +37,7 @@ class NiconicoSearch(object):
             each_limit = min(limit - offset, 100)
             params = {
                 "targets": target,
-                "fields": "contentId,title,viewCounter,thumbnailUrl,tags,description,startTime,lengthSeconds",
+                "fields": "contentId,title,viewCounter,thumbnailUrl,tags,description,startTime,lengthSeconds,channelId",
                 "_sort": "-viewCounter",
                 "_offset": offset,
                 "_limit": each_limit,
@@ -56,8 +56,8 @@ class NiconicoSearch(object):
     def search_tags(self, tags, limit=100):
         return self.search_tags_base(target="tags", tags=tags, additional_params={}, limit=limit)
 
-    def search_tags_exact(self, tags, limit=100):
-        return self.search_tags_base(target="tags_exact", tags=tags, additional_params={}, limit=limit)
+    def search_tags_exact(self, tags, limit=100, additional_params={}):
+        return self.search_tags_base(target="tags_exact", tags=tags, additional_params=additional_params, limit=limit)
 
     def search_category_tag(self, tag, limit=100):
         return self.search_tags_base(target="tags_exact", tags=[tag],

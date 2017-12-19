@@ -53,6 +53,15 @@ class CommentFilter(object):
             if burst.text.find(u"売名") >= 0:
                 continue
                 # 煽り
+            if burst.text.find(u"死ね") >= 0:
+                continue
+                # 煽り
+            if burst.text.find(u"レイパー") >= 0:
+                continue
+                # school days
+            if burst.text.find(u"孕") >= 0:
+                continue
+                # school days
 
             if burst.text.find(u"右クリック") >= 0:
                 continue

@@ -84,6 +84,9 @@ def main(args):
         if args.query_head is not None:
             query = " ".join(query.split()[:args.query_head])
 
+        if args.remove_head is not None:
+            query = " ".join(query.split()[args.remove_head:])
+
         for regexp in args.exact_regexp:
             query = re.sub(u"("+regexp.decode("utf-8")+u")", r'"\1"', query)
 
@@ -111,12 +114,16 @@ def main(args):
         print "=======\n{}\n{}".format(
             video.danime_content['title'].encode("utf-8"),
             video.channel_content['title'].encode("utf-8") if video.channel_content is not None else "なし" )
-    k = raw_input("ok?")
-    print k
-    if k != "y":
-        exit(1)
-    else:
+
+    if args.force:
         danime.add_series(series)
+    else:
+        k = raw_input("ok?")
+        print k
+        if k != "y":
+            exit(1)
+        else:
+            danime.add_series(series)
 
 
 if __name__ == '__main__':
@@ -126,6 +133,7 @@ if __name__ == '__main__':
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument("--cutlast", type=int, default=0)
     parser.add_argument("--query_head", type=int)
+    parser.add_argument("--remove_head", type=int)
     parser.add_argument("--force", action="store_true")
     parser.add_argument("--remove_wa", action="store_true")
     parser.add_argument("--remove_regexp", nargs="+")
